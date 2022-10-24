@@ -3,6 +3,7 @@ package control
 import (
 	"crypto/tls"
 	"net/http"
+	"time"
 
 	"github.com/go-kit/kit/log"
 )
@@ -29,5 +30,11 @@ func WithInsecureSkipVerify() Option {
 func WithDisableTLS() Option {
 	return func(c *Client) {
 		c.disableTLS = true
+	}
+}
+
+func WithRequestInterval(interval time.Duration) Option {
+	return func(c *Client) {
+		c.requestInterval = interval
 	}
 }

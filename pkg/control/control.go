@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/go-kit/kit/log"
 
@@ -14,14 +15,15 @@ import (
 )
 
 type Client struct {
-	addr       string
-	baseURL    *url.URL
-	cancel     context.CancelFunc
-	client     *http.Client
-	db         *bbolt.DB
-	insecure   bool
-	disableTLS bool
-	logger     log.Logger
+	addr            string
+	baseURL         *url.URL
+	cancel          context.CancelFunc
+	client          *http.Client
+	db              *bbolt.DB
+	requestInterval time.Duration
+	insecure        bool
+	disableTLS      bool
+	logger          log.Logger
 }
 
 func NewControlClient(db *bbolt.DB, addr string, opts ...Option) (*Client, error) {
@@ -30,11 +32,12 @@ func NewControlClient(db *bbolt.DB, addr string, opts ...Option) (*Client, error
 		return nil, fmt.Errorf("parsing URL: %w", err)
 	}
 	c := &Client{
-		logger:  log.NewNopLogger(),
-		baseURL: baseURL,
-		client:  http.DefaultClient,
-		db:      db,
-		addr:    addr,
+		logger:          log.NewNopLogger(),
+		baseURL:         baseURL,
+		client:          http.DefaultClient,
+		db:              db,
+		addr:            addr,
+		requestInterval: 60 * time.Second,
 	}
 
 	for _, opt := range opts {
@@ -50,10 +53,13 @@ func NewControlClient(db *bbolt.DB, addr string, opts ...Option) (*Client, error
 
 func (c *Client) Start(ctx context.Context) {
 	ctx, c.cancel = context.WithCancel(ctx)
+	requestTicker := time.NewTicker(c.requestInterval)
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-requestTicker.C:
+			c.makeRequest(ctx)
 		}
 	}
 }
