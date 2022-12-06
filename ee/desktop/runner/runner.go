@@ -4,6 +4,7 @@ package runner
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/kolide/kit/ulid"
 	"github.com/kolide/launcher/ee/consoleuser"
+	"github.com/kolide/launcher/ee/control"
 	"github.com/kolide/launcher/ee/desktop/client"
 	"github.com/kolide/launcher/pkg/backoff"
 	"github.com/shirou/gopsutil/process"
@@ -77,6 +79,13 @@ func WithUsersFilesRoot(token string) desktopUsersProcessesRunnerOption {
 	}
 }
 
+// WithControlRegistry sets the registry for registering consumers & subscribers of subsystems
+func WithControlRegistry(registry *control.Registry) desktopUsersProcessesRunnerOption {
+	return func(r *DesktopUsersProcessesRunner) {
+		registry.RegisterConsumer("desktop", r)
+	}
+}
+
 // DesktopUsersProcessesRunner creates a launcher desktop process each time it detects
 // a new console (GUI) user. If the current console user's desktop process dies, it
 // will create a new one.
@@ -103,6 +112,8 @@ type DesktopUsersProcessesRunner struct {
 	// usersFilesRoot is the launcher root dir with will be the parent dir
 	// for kolide desktop files on a per user basis
 	usersFilesRoot string
+	// controlRegistry is for registering consumers & subscribers of subsystems
+	controlRegistry *control.Registry
 }
 
 // processRecord is used to track spawned desktop proccesses.
@@ -209,6 +220,50 @@ func (r *DesktopUsersProcessesRunner) Interrupt(interruptError error) {
 			}
 		}
 	}
+}
+
+type IconStatus struct {
+	IconCode int    `json:"iconCode"`
+	IconSt   string `json:"iconStatus,omitempty"`
+}
+
+func (r *DesktopUsersProcessesRunner) Update(data io.Reader) {
+
+	var iconst IconStatus
+	if err := json.NewDecoder(data).Decode(&iconst); err != nil {
+		level.Error(r.logger).Log(
+			"msg", "failed to decode desktop control data",
+			"err", err,
+		)
+		return
+	}
+
+	var iconName string
+	mod := iconst.IconCode % 3
+	switch mod {
+	case 0:
+		iconName = "good"
+	case 1:
+		iconName = "warn"
+	case 2:
+		iconName = "fail"
+	}
+
+	if iconName != "" {
+		for uid, proc := range r.uidProcs {
+			client := client.New(r.authToken, proc.socketPath)
+			if err := client.SetStatus(iconName); err != nil {
+				level.Error(r.logger).Log(
+					"msg", "error sending status command to desktop process",
+					"uid", uid,
+					"pid", proc.process.Pid,
+					"path", proc.path,
+					"err", err,
+				)
+			}
+		}
+	}
+
 }
 
 func (r *DesktopUsersProcessesRunner) runConsoleUserDesktop() error {

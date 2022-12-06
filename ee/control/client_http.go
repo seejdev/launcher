@@ -47,8 +47,8 @@ func NewControlHTTPClient(addr string, opts ...HTTPClientOption) (*HTTPClient, e
 	return c, nil
 }
 
-func (c *HTTPClient) Get(subsystem, cachedETag string) (etag string, data io.Reader, err error) {
-	verb, path := "GET", "/api/v1/control"
+func (c *HTTPClient) Get(resource, cachedETag string) (etag string, data io.Reader, err error) {
+	verb, path := "GET", fmt.Sprintf("/api/v1/control/%s", resource)
 	params := &controlRequest{
 		Message: "ping",
 	}
