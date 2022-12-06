@@ -23,6 +23,7 @@ import (
 	"github.com/kolide/kit/version"
 	"github.com/kolide/launcher/cmd/launcher/internal"
 	"github.com/kolide/launcher/cmd/launcher/internal/updater"
+	"github.com/kolide/launcher/ee/control"
 	desktopRunner "github.com/kolide/launcher/ee/desktop/runner"
 	"github.com/kolide/launcher/ee/localserver"
 	"github.com/kolide/launcher/pkg/contexts/ctxlog"
@@ -31,6 +32,7 @@ import (
 	"github.com/kolide/launcher/pkg/log/checkpoint"
 	"github.com/kolide/launcher/pkg/osquery"
 	osqueryInstanceHistory "github.com/kolide/launcher/pkg/osquery/runtime/history"
+	"github.com/kolide/launcher/pkg/osquery/tables/kolide_server_data"
 	"github.com/kolide/launcher/pkg/service"
 	"github.com/oklog/run"
 
@@ -179,13 +181,19 @@ func runLauncher(ctx context.Context, cancel func(), opts *launcher.Options) err
 		"build", versionInfo.Revision,
 	)
 
-	// If the control server has been opted-in to, run the control service
+	var controlRegistry *control.Registry
 	if opts.Control {
-		control, err := createControlService(ctx, logger, opts)
+		// If the control server has been opted-in to, run the control service
+		control, controlService, err := createControlService(ctx, logger, opts)
 		if err != nil {
 			return fmt.Errorf("Failed to setup control service: %w", err)
 		}
 		runGroup.Add(control.Execute, control.Interrupt)
+		controlRegistry = &controlService.Registry
+
+		// serverDataUpdateHandler acts as a consumer of the server data table updates
+		serverDataUpdateHandler := kolide_server_data.NewUpdateHandler(db)
+		controlRegistry.RegisterConsumer("kolide_server_data", serverDataUpdateHandler)
 	}
 
 	var runner *desktopRunner.DesktopUsersProcessesRunner
@@ -196,6 +204,7 @@ func runLauncher(ctx context.Context, cancel func(), opts *launcher.Options) err
 			desktopRunner.WithHostname(opts.KolideServerURL),
 			desktopRunner.WithAuthToken(ulid.New()),
 			desktopRunner.WithUsersFilesRoot(rootDirectory),
+			desktopRunner.WithControlRegistry(controlRegistry),
 		)
 		runGroup.Add(runner.Execute, runner.Interrupt)
 	}
