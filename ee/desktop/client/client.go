@@ -64,10 +64,24 @@ func (c *client) Shutdown() error {
 }
 
 func (c *client) Ping() error {
-	resp, err := c.base.Get("http://unix/ping")
+	params := &status{
+		Status: "HELLO",
+	}
+
+	bodyBytes, err := json.Marshal(params)
+	if err != nil {
+		return fmt.Errorf("marshaling json: %w", err)
+	}
+
+	resp, err := c.base.Post("http://unix/ping", "application/json", bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return err
 	}
+
+	// resp, err := c.base.Get("http://unix/ping")
+	// if err != nil {
+	// 	return err
+	// }
 
 	if resp.Body != nil {
 		resp.Body.Close()

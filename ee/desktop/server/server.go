@@ -112,6 +112,25 @@ type status struct {
 
 func (s *DesktopServer) statusHandler(w http.ResponseWriter, req *http.Request) {
 
+	// Use http.MaxBytesReader to enforce a maximum read of 1MB from the
+	// response body. A request body larger than that will now result in
+	// Decode() returning a "http: request body too large" error.
+	req.Body = http.MaxBytesReader(w, req.Body, 1048576)
+
+	// Setup the decoder and call the DisallowUnknownFields() method on it.
+	// This will cause Decode() to return a "json: unknown field ..." error
+	// if it encounters any extra unexpected fields in the JSON. Strictly
+	// speaking, it returns an error for "keys which do not match any
+	// non-ignored, exported fields in the destination".
+	dec := json.NewDecoder(req.Body)
+	dec.DisallowUnknownFields()
+
+	var p status
+	dec.Decode(&p)
+
+	level.Info(s.logger).Log("msg", "statusHandler 1",
+		"iconStatus", p.Status)
+
 	// body, _ := ioutil.ReadAll(req.Body)
 
 	// level.Info(s.logger).Log("msg", "STATS",
@@ -137,7 +156,7 @@ func (s *DesktopServer) statusHandler(w http.ResponseWriter, req *http.Request) 
 	// buf := new(strings.Builder)
 	// _, err = io.Copy(buf, reader)
 
-	level.Info(s.logger).Log("msg", "PING PING PIE !!!! statusHandler",
+	level.Info(s.logger).Log("msg", "statusHandler 2",
 		"iconStatus", iconStatus.Status)
 
 	w.Header().Set("Content-Type", "application/json")
