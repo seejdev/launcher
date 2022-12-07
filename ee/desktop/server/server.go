@@ -5,6 +5,8 @@ package server
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -36,7 +38,8 @@ func New(logger log.Logger, authToken string, socketPath string, shutdownChan ch
 
 	authedMux := http.NewServeMux()
 	authedMux.HandleFunc("/shutdown", desktopServer.shutdownHandler)
-	authedMux.HandleFunc("/ping", pingHandler)
+	authedMux.HandleFunc("/ping", desktopServer.pingHandler)
+	authedMux.HandleFunc("/status", desktopServer.statusHandler)
 
 	desktopServer.server = &http.Server{
 		Handler: desktopServer.authMiddleware(authedMux),
@@ -91,10 +94,54 @@ func (s *DesktopServer) shutdownHandler(w http.ResponseWriter, req *http.Request
 	s.shutdownChan <- struct{}{}
 }
 
-func pingHandler(w http.ResponseWriter, req *http.Request) {
+func (s *DesktopServer) pingHandler(w http.ResponseWriter, req *http.Request) {
+
+	body, _ := ioutil.ReadAll(req.Body)
+
+	level.Info(s.logger).Log("msg", "PING STATS",
+		"BODY LENGTH", len(body), "bytes", body, "method", req.Method, "URL", req.URL)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"pong": "Kolide"}` + "\n"))
+}
+
+type status struct {
+	Status string `json:"status"`
+}
+
+func (s *DesktopServer) statusHandler(w http.ResponseWriter, req *http.Request) {
+
+	// body, _ := ioutil.ReadAll(req.Body)
+
+	// level.Info(s.logger).Log("msg", "STATS",
+	// 	"bytes", body)
+
+	// level.Info(s.logger).Log("msg", "STATS",
+	// 	"BODY LENGTH", len(body), "bytes", body, "method", req.Method, "URL", req.URL)
+
+	// if err != nil {
+	// 	// level.Error(c.logger).Log(
+	// 	// 	"msg", "error reading response body from control server",
+	// 	// 	"err", err,
+	// 	// )
+	// 	// return "", nil, err
+	// }
+
+	var iconStatus status
+	if err := json.NewDecoder(req.Body).Decode(&iconStatus); err != nil {
+		// return fmt.Errorf("failed to decode server data json: %w", err)
+	}
+	// reader := bytes.NewReader(body)
+
+	// buf := new(strings.Builder)
+	// _, err = io.Copy(buf, reader)
+
+	level.Info(s.logger).Log("msg", "PING PING PIE !!!! statusHandler",
+		"iconStatus", iconStatus.Status)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *DesktopServer) authMiddleware(next http.Handler) http.Handler {
