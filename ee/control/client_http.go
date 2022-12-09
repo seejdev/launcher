@@ -30,7 +30,7 @@ type controlRequest struct {
 }
 
 func NewControlHTTPClient(addr string, opts ...HTTPClientOption) (*HTTPClient, error) {
-	baseURL, err := url.Parse("https://" + addr)
+	baseURL, err := url.Parse(fmt.Sprintf("https://%s", addr))
 	if err != nil {
 		return nil, fmt.Errorf("parsing URL: %w", err)
 	}
@@ -44,22 +44,18 @@ func NewControlHTTPClient(addr string, opts ...HTTPClientOption) (*HTTPClient, e
 		opt(c)
 	}
 
-	if c.disableTLS {
-		c.baseURL.Scheme = "http"
-	}
-
 	return c, nil
 }
 
-func (c *HTTPClient) Get(subsystem, cachedETag string) (etag string, data io.Reader, err error) {
-	verb, path := "GET", "/api/v1/control"
+func (c *HTTPClient) Get(resource, cachedETag string) (etag string, data io.Reader, err error) {
+	verb, path := "GET", fmt.Sprintf("/api/v1/control/%s", resource)
 	params := &controlRequest{
 		Message: "ping",
 	}
 
 	response, err := c.do(verb, path, cachedETag, params)
 	if err != nil {
-		level.Debug(c.logger).Log(
+		level.Error(c.logger).Log(
 			"msg", "error making request to control server endpoint",
 			"err", err,
 		)
@@ -70,7 +66,7 @@ func (c *HTTPClient) Get(subsystem, cachedETag string) (etag string, data io.Rea
 	switch response.StatusCode {
 	case http.StatusNotFound:
 		// This could indicate an inconsistency in server data, or a client logic error
-		level.Debug(c.logger).Log(
+		level.Error(c.logger).Log(
 			"msg", "got HTTP 404 making control server request",
 			"err", err,
 		)
@@ -87,7 +83,7 @@ func (c *HTTPClient) Get(subsystem, cachedETag string) (etag string, data io.Rea
 	}
 
 	if response.StatusCode != http.StatusOK {
-		level.Debug(c.logger).Log(
+		level.Error(c.logger).Log(
 			"msg", "got not-ok status code from control server",
 			"response_code", response.StatusCode,
 		)
@@ -96,7 +92,7 @@ func (c *HTTPClient) Get(subsystem, cachedETag string) (etag string, data io.Rea
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		level.Debug(c.logger).Log(
+		level.Error(c.logger).Log(
 			"msg", "error reading response body from control server",
 			"err", err,
 		)

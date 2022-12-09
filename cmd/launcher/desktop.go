@@ -93,6 +93,10 @@ func runDesktop(args []string) error {
 		return err
 	}
 
+	server.RegisterOnStatusChange(func(st string) {
+		menu.SetStatus(st)
+	})
+
 	// start desktop server
 	runGroup.Add(server.Serve, func(err error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

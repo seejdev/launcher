@@ -5,6 +5,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"net/http"
 	"os"
@@ -18,12 +19,13 @@ import (
 )
 
 type DesktopServer struct {
-	logger       log.Logger
-	server       *http.Server
-	listener     net.Listener
-	shutdownChan chan<- struct{}
-	authToken    string
-	socketPath   string
+	logger              log.Logger
+	server              *http.Server
+	listener            net.Listener
+	shutdownChan        chan<- struct{}
+	authToken           string
+	socketPath          string
+	statusChangeHandler func(string)
 }
 
 func New(logger log.Logger, authToken string, socketPath string, shutdownChan chan<- struct{}) (*DesktopServer, error) {
@@ -36,7 +38,8 @@ func New(logger log.Logger, authToken string, socketPath string, shutdownChan ch
 
 	authedMux := http.NewServeMux()
 	authedMux.HandleFunc("/shutdown", desktopServer.shutdownHandler)
-	authedMux.HandleFunc("/ping", pingHandler)
+	authedMux.HandleFunc("/ping", desktopServer.pingHandler)
+	authedMux.HandleFunc("/status", desktopServer.statusHandler)
 
 	desktopServer.server = &http.Server{
 		Handler: desktopServer.authMiddleware(authedMux),
@@ -91,18 +94,37 @@ func (s *DesktopServer) shutdownHandler(w http.ResponseWriter, req *http.Request
 	s.shutdownChan <- struct{}{}
 }
 
-func pingHandler(w http.ResponseWriter, req *http.Request) {
+func (s *DesktopServer) pingHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"pong": "Kolide"}` + "\n"))
 }
 
+func (s *DesktopServer) RegisterOnStatusChange(f func(string)) {
+	s.statusChangeHandler = f
+}
+
+type status struct {
+	Status string `json:"status"`
+}
+
+func (s *DesktopServer) statusHandler(w http.ResponseWriter, req *http.Request) {
+	var iconStatus status
+	if err := json.NewDecoder(req.Body).Decode(&iconStatus); err != nil {
+		// return fmt.Errorf("failed to decode server data json: %w", err)
+	}
+
+	level.Info(s.logger).Log("msg", "PING PING PIE !!!! statusHandler",
+		"iconStatus", iconStatus.Status)
+
+	s.statusChangeHandler(iconStatus.Status)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+}
+
 func (s *DesktopServer) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Body != nil {
-			r.Body.Close()
-		}
-
 		authHeader := strings.Split(r.Header.Get("Authorization"), "Bearer ")
 
 		if len(authHeader) != 2 {
