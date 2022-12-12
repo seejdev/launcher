@@ -1,0 +1,35 @@
+ #include "menu_darwin.h"
+
+#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
+
+void createMenu(const void * bytes, int length) {
+        NSStatusItem *statusItem;
+    NSImage *statusIconIdle;
+    NSImage *statusIconActive;
+    NSImage *statusIconError;
+
+    // Setup the status bar item
+    statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
+    // [statusItem setHighlightMode:YES];
+    // [statusItem setEnabled:YES];
+    // [statusItem setTarget:self];
+    //[statusItem setMenu:statusMenu];
+
+    // Cache status bar images
+    // statusIconIdle = [NSImage imageNamed:@"statusbar_idle"];
+    // [statusIconIdle setTemplate:YES];
+    // statusIconActive = [NSImage imageNamed:@"statusbar_active"];
+
+    // NSData *dd = [[NSData alloc] initWithBytes:bytes length:length];
+    NSData *dd = [NSData dataWithBytes:bytes length:length];
+    statusIconError = [NSImage initWithData:dd];
+    // statusIconError = [NSImage imageNamed:@"statusbar_error"];
+
+    NSImage *statusBarIcon = nil;
+    statusBarIcon = statusIconError;
+
+    // Update the status bar menu and icon
+    // [statusMenuItem setTitle:statusTitle];
+    [[statusItem button] setImage:statusBarIcon];
+}
