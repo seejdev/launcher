@@ -1,10 +1,7 @@
 package menu
 
 import (
-	"fmt"
-
 	"fyne.io/systray"
-	"github.com/kolide/kit/version"
 	"github.com/kolide/launcher/ee/desktop/assets"
 )
 
@@ -15,25 +12,47 @@ func Init(hostname string) {
 		systray.SetTemplateIcon(assets.KolideDesktopIcon, assets.KolideDesktopIcon)
 		systray.SetTooltip("Kolide")
 
-		dynMenuItem = systray.AddMenuItem("Kolide agent is running", "")
+		dynMenuItem = systray.AddMenuItem("Kolide Agent is running", "")
+
+		msg := "Kolide Agent is blocking access"
+		systray.SetTemplateIcon(assets.KolideDesktopIconFail, assets.KolideDesktopIconFail)
+		systray.SetTooltip(msg)
+		dynMenuItem.SetTitle(msg)
+		dynMenuItem.SetIcon(assets.KolideStatusRed)
+
 		systray.AddSeparator()
 
 		dynMenuItem.Disable()
-		dynMenuItem.SetIcon(assets.KolideStatusGreen)
+		// dynMenuItem.SetIcon(assets.KolideStatusGreen)
 
-		versionItem := systray.AddMenuItem(fmt.Sprintf("Version %s", version.Version().Version), "")
-		versionItem.Disable()
+		// versionItem := systray.AddMenuItem(fmt.Sprintf("Version %s", version.Version().Version), "")
+		// versionItem.Disable()
+
+		failingChecksMenuItem := systray.AddMenuItem("Failing checks", "")
+		failingChecksMenuItem.SetIcon(assets.KolideAlert)
+		failingChecksMenuItem.AddSubMenuItem("Require Google Chrome is up-to-date", "")
+		failingChecksMenuItem.AddSubMenuItem("Ensure Kolide Agent Has Full Disk Access Entitlement", "")
+		failingChecksMenuItem.AddSubMenuItem("Ensure Important Updates Are Installed", "")
+		failingChecksMenuItem.AddSubMenuItem("Help Guide...", "")
+
+		systray.AddSeparator()
+		privacyCenter := systray.AddMenuItem("My Privacy Center", "")
+		privacyCenter.SetIcon(assets.KolidePrivacyCenter)
+
+		systray.AddSeparator()
+		systray.AddMenuItem("About Kolide agent", "")
 
 		// if prod environment, return
 		if hostname == "k2device-preprod.kolide.com" || hostname == "k2device.kolide.com" {
 			return
 		}
-
-		// in non prod environment
-		systray.SetTemplateIcon(assets.KolideDebugDesktopIcon, assets.KolideDebugDesktopIcon)
-		systray.AddSeparator()
-		systray.AddMenuItem("--- DEBUG ---", "").Disable()
-		systray.AddMenuItem(fmt.Sprintf("Hostname: %s", hostname), "").Disable()
+		/*
+			// in non prod environment
+			systray.SetTemplateIcon(assets.KolideDebugDesktopIcon, assets.KolideDebugDesktopIcon)
+			systray.AddSeparator()
+			systray.AddMenuItem("--- DEBUG ---", "").Disable()
+			systray.AddMenuItem(fmt.Sprintf("Hostname: %s", hostname), "").Disable()
+		*/
 	}
 
 	systray.Run(onReady, func() {})

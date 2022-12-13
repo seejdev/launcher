@@ -25,6 +25,11 @@ var (
 	//go:embed circle-red.png
 	KolideStatusRed []byte
 
+	//go:embed privacy.png
+	KolidePrivacyCenter []byte
+	//go:embed alert.png
+	KolideAlert []byte
+
 	//go:embed kolide-debug.png
 	KolideDebugDesktopIcon []byte
 )
