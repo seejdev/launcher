@@ -177,23 +177,20 @@ func generateIco(ctx context.Context, logger log.Logger, name string) error {
 		return nil
 	}
 
-	// First, we need to generate all the sizes
-	for _, size := range icoSizes {
-		cmd := exec.CommandContext(
-			ctx,
-			"convert",
-			"-resize", fmt.Sprintf("%sx%s", size, size),
-			input,
-			fmt.Sprintf("%s/%s-%s.ico", tmpDir, name, size),
-		)
-		level.Debug(logger).Log("msg", "Resizing with", "cmd", cmd.String())
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("generating ico for size %s: %w", size, err)
-		}
+	cmd := exec.CommandContext(
+		ctx,
+		"convert",
+		fmt.Sprintf("-define icon:auto-resize=%s", strings.Join(icoSizes, ",")),
+		input,
+		fmt.Sprintf("%s/%s.ico", tmpDir, name),
+	)
+	level.Debug(logger).Log("msg", "Resizing with", "cmd", cmd.String())
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("generating icos: %w", err)
 	}
 
 	// Now that we have the intermediary sizes, we can stich them into a single ico
-	cmd := exec.CommandContext(ctx, "convert", fmt.Sprintf("%s/%s-*.ico", tmpDir, name), output)
+	cmd = exec.CommandContext(ctx, "convert", fmt.Sprintf("%s/%s-*.ico", tmpDir, name), output)
 	level.Debug(logger).Log("msg", "Consolodating ico with", "cmd", cmd.String())
 
 	if err := cmd.Run(); err != nil {
