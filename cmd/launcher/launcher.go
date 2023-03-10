@@ -24,6 +24,7 @@ import (
 	desktopRunner "github.com/kolide/launcher/ee/desktop/runner"
 	"github.com/kolide/launcher/ee/localserver"
 	"github.com/kolide/launcher/pkg/agent"
+	"github.com/kolide/launcher/pkg/agent/runtime"
 	agentbbolt "github.com/kolide/launcher/pkg/agent/storage/bbolt"
 	"github.com/kolide/launcher/pkg/contexts/ctxlog"
 	"github.com/kolide/launcher/pkg/debug"
@@ -194,6 +195,9 @@ func runLauncher(ctx context.Context, cancel func(), opts *launcher.Options) err
 		time.Sleep(30 * time.Second)
 		checkpointer.SetQuerier(extension)
 	}()
+
+	flags := runtime.NewFlags(logger)
+	rtime := runtime.NewRuntime(logger, flags)
 
 	// Create the control service and services that depend on it
 	var runner *desktopRunner.DesktopUsersProcessesRunner

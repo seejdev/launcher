@@ -6,16 +6,17 @@ import (
 
 type Runtime struct {
 	logger log.Logger
-	Flags  Flags
+	Flags  *Flags
 	// flags
 	// Querier
 	// storage?
 	// other context stuff?
 }
 
-func New(logger log.Logger) *Runtime {
+func NewRuntime(logger log.Logger, flags *Flags) *Runtime {
 	r := &Runtime{
 		logger: logger,
+		Flags:  flags,
 	}
 
 	return r

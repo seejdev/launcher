@@ -1,6 +1,8 @@
 package runtime
 
 import (
+	"time"
+
 	"github.com/go-kit/kit/log"
 )
 
@@ -15,4 +17,20 @@ func NewFlags(logger log.Logger) *Flags {
 	}
 
 	return f
+}
+
+func SetDesktopEnabled(enabled bool) error {
+	return nil // TODO
+}
+
+func IsDesktopEnabled() bool {
+	return true // TODO
+}
+
+func SetControlRequestInterval() error {
+	return nil // TODO
+}
+
+func ControlRequestInterval() time.Duration {
+	return 60 * time.Second // TODO
 }

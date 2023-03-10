@@ -34,7 +34,11 @@ flowchart TB
     A[Client]
     B[Flags Store]
     C[Observers]
+    D[Sanitize]
 
-    A -->|Runtime.Flags.Set|B
+    A -->|Runtime.Flags.Set|D
+    D -->|Store Sanitized Value|B
     B -->|onFlagChanged|C
+
+    C -->|Return err to Client| A
 ```
