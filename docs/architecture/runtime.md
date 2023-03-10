@@ -1,25 +1,40 @@
-# Runtime
+# Runtime.Flags
 
 ## Getting Flags
 
 ```mermaid
 flowchart TB
-    tempOverride{Is temporarily overridden?}
-    persisted{Is persisted?}
-    cmd{Cmd line argument?}
+    A[Client]
+    C[Use Default Value]
+    D[Sanitize]
+    E{Is flag temporarily overridden?}
+    F{Has control server provided a value?}
+    G{Was a command line flag provided?}
 
-    Client -->|Get Flag Value|Runtime
+    A -->|Runtime.Flags.Get| E
+    E -->|Yes| D
+    E -->|No| F
 
-    Runtime --> tempOverride
+    F -->|Yes| D
+    F -->|No| G
 
-    tempOverride --> persisted
+    G -->|Yes| D
+    G -->|No| C
 
-    persisted --> Default
+    C --> D
+
+    D -->|Return to Client| A
+
 ```
 
 ## Setting Flags
 
 ```mermaid
 flowchart TB
-    Request --> Runtime
+    A[Client]
+    B[Flags Store]
+    C[Observers]
+
+    A -->|Runtime.Flags.Set|B
+    B -->|onFlagChanged|C
 ```
