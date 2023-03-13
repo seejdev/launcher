@@ -23,7 +23,7 @@ func SetDesktopEnabled(enabled bool) error {
 	return nil // TODO
 }
 
-func IsDesktopEnabled() bool {
+func DesktopEnabled() bool {
 	return true // TODO
 }
 
@@ -34,3 +34,9 @@ func SetControlRequestInterval() error {
 func ControlRequestInterval() time.Duration {
 	return 60 * time.Second // TODO
 }
+
+
+// DisableControlTLS disables TLS transport with the control server.
+DisableControlTLS bool
+// InsecureControlTLS disables TLS certificate validation for the control server.
+InsecureControlTLS bool

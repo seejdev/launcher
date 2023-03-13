@@ -23,7 +23,7 @@ flowchart TB
 
     C --> D
 
-    D -->|Return to Client| A
+    D -.->|Return to Client| A
 
 ```
 
@@ -40,5 +40,5 @@ flowchart TB
     D -->|Store Sanitized Value|B
     B -->|onFlagChanged|C
 
-    C -->|Return err to Client| A
+    C -.->|Return err to Client| A
 ```
