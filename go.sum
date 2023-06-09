@@ -307,6 +307,8 @@ github.com/kolide/systray v1.10.4 h1:eBhnVfhW0fGal1KBkBZC9fzRs4yrxUymgiXuQh5MBSg
 github.com/kolide/systray v1.10.4/go.mod h1:FwK9yUmU3JO+vA7TOLQSFRgEQ3euLxOqic5qlBtFrik=
 github.com/kolide/systray v1.10.5-0.20230609145157-b5a9b719e9a4 h1:3cY3BEPVyglLveEZ50uQaTgHJrt7dhgGTRaY93jZAAo=
 github.com/kolide/systray v1.10.5-0.20230609145157-b5a9b719e9a4/go.mod h1:FwK9yUmU3JO+vA7TOLQSFRgEQ3euLxOqic5qlBtFrik=
+github.com/kolide/systray v1.10.5-0.20230609152019-b1d8bde4a1e5 h1:Q3XeLnDpf3Z60yg1ceKzkB5IyPR5OQAjmRKUA3CdZrE=
+github.com/kolide/systray v1.10.5-0.20230609152019-b1d8bde4a1e5/go.mod h1:FwK9yUmU3JO+vA7TOLQSFRgEQ3euLxOqic5qlBtFrik=
 github.com/kolide/toast v1.0.0 h1:pQViHayQVSzkdz0v8xnYuC/o4L7LF8mUuLCvpZ21efU=
 github.com/kolide/toast v1.0.0/go.mod h1:84R5sM7VWn6morUpJBGKrBMZB3Cm9OrmtBLWHwSEWL0=
 github.com/kolide/updater v0.0.0-20190315001611-15bbc19b5b80 h1:XFzdAHvTlbQoHZdEgOEiFt93eyfXP6VZCwH5p+lPpBg=

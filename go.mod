@@ -56,7 +56,7 @@ require (
 require (
 	github.com/apache/thrift v0.16.0
 	github.com/fatih/color v1.15.0
-	github.com/kolide/systray v1.10.5-0.20230609145157-b5a9b719e9a4
+	github.com/kolide/systray v1.10.5-0.20230609152019-b1d8bde4a1e5
 	github.com/kolide/toast v1.0.0
 	github.com/shirou/gopsutil/v3 v3.23.3
 )
