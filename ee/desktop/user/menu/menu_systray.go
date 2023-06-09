@@ -3,6 +3,7 @@ package menu
 import (
 	"sync"
 
+	"github.com/go-kit/kit/log/level"
 	"github.com/kolide/systray"
 )
 
@@ -21,7 +22,9 @@ var (
 func (m *menu) Init() {
 	// Build will be invoked after the menu has been initialized
 	// Before the menu exits, cleanup the goroutines
+	level.Info(m.logger).Log("msg", "MENU INIT START")
 	systray.Run(m.Build, m.cleanup, m.onAppearanceChanged)
+	level.Info(m.logger).Log("msg", "MENU INIT START")
 }
 
 // onAppearanceChanged is called by systray when the menu bar's effective appearance changes between dark and light
@@ -36,22 +39,28 @@ func (m *menu) onAppearanceChanged(dark bool) {
 // Build parses the menu file and constructs the menu. If a menu already exists,
 // all of its items will be removed before the new menu is built.
 func (m *menu) Build() {
+	level.Info(m.logger).Log("msg", "MENU BUILD START")
+
 	// Lock so the menu is never being modified by more than one goroutine at a time
 	buildMutex.Lock()
 	defer buildMutex.Unlock()
 
+	level.Info(m.logger).Log("msg", "MENU BUILD RESET START")
+
 	// Remove all menu items each time we rebuild the menu
 	systray.ResetMenu()
+	level.Info(m.logger).Log("msg", "MENU BUILD RESET END")
 
 	// Even though the menu items have been removed, we still have goroutines hanging around
 	m.cleanup()
-
+	level.Info(m.logger).Log("msg", "MENU BUILD BUILD PARSE START")
 	// Reparse the menu file & rebuild the menu
 	menuData := m.getMenuData()
 	parseMenuData(menuData, m)
 }
 
 func (m *menu) setIcon(icon menuIcon) {
+	level.Info(m.logger).Log("msg", "MENU SETICON")
 	systrayMenuIcon = icon
 	iconBytes := getIcon(icon)
 	if iconBytes != nil {
@@ -60,6 +69,7 @@ func (m *menu) setIcon(icon menuIcon) {
 }
 
 func (m *menu) setTooltip(tooltip string) {
+	level.Info(m.logger).Log("msg", "MENU SETTOOLTIP")
 	systray.SetTooltip(tooltip)
 }
 
@@ -93,7 +103,9 @@ func (m *menu) addSeparator() {
 
 // Shutdown quits the menu. It unblocks the Init() call.
 func (m *menu) Shutdown() {
+	level.Info(m.logger).Log("msg", "MENU QUIT START")
 	systray.Quit()
+	level.Info(m.logger).Log("msg", "MENU QUIT END")
 }
 
 // Cleans up goroutines associated with menu items
